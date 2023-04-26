@@ -1,0 +1,37 @@
+---
+title: "3D UMAP reduction and visualization"
+author: "Clemente Calabrese"
+date: "2023-04-14"
+output: html_document
+---
+
+```{r setup, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data and Tools loading
+## Load the libraries needed
+```{r message = FALSE}
+library(tidyverse)
+library(Seurat)
+library(SeuratObject)
+library(patchwork)
+```
+# Clusterization
+## Load the experimental integrated dataset and run the clusterization scripts
+These functions generate PCA and UMAP coordinates (used for dimensionality reduction); also they split cells into clusters, based on their similarity.
+```{r, message = FALSE}
+df <- RunPCA(df, verbose = FALSE)
+df <- RunUMAP(df, reduction = "pca", dims = 1:30, n.components = 3L) #n.neighbors=30, min.dist = 0
+df <- FindNeighbors(df, reduction = "pca", dims = 1:30)
+df <- FindClusters(df, resolution = c(0.4,1))  #CLUSTER RESOLUTIONS(0.4,1)
+
+```
+
+## Retrieve the 3D UMAP coordinates
+Save the coordinates of each cell to a new file named "UMAP_coord.tsv"
+```{r}
+as.data.frame(df[["umap"]]@cell.embeddings) %>%
+  write_delim(file = "UMAP_coord.tsv", delim = "\t")
+```
+Later this file will be retrieved by the Blender API to plot it in the 3D space
